@@ -1,0 +1,56 @@
+#define LED_ESTADO 6
+#define LED_CAMERA 7
+#define TRIG 3
+#define ECHO 2
+#define TIMERLOOP 100
+
+static int estadoleitura = 0;   // variável para controlar repetição de comandos e informações no monitor serial
+
+void setup() {
+	  Serial.begin(9600);
+	  pinMode(LED_ESTADO, INPUT);
+	  pinMode(LED_CAMERA, INPUT);
+  	pinMode(TRIG,OUTPUT);
+  	pinMode(ECHO,INPUT);
+}
+
+long DistanciaCm(int triggerPin, int echoPin) // código para leitura da distância por meio de sinal ultrassônico
+{  
+  pinMode(triggerPin, OUTPUT); 
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  pinMode(echoPin, INPUT);
+  return 0.01723 * pulseIn(echoPin, HIGH);   // RETORNA EM CENTÍMETROS
+}
+
+void loop() {    
+  	int distancia = DistanciaCm(TRIG,ECHO);  
+    if(distancia <= 200){
+      	if(estadoleitura == 0){  
+      		  Serial.print("Veiculo se aproximando. Distancia verificada: ");
+      		  Serial.print(distancia);
+      		  Serial.println("cm");          	
+      		  digitalWrite(LED_ESTADO, HIGH);
+          	Serial.print("Prepare para a foto... \n");
+      		  digitalWrite(LED_CAMERA, HIGH); // simbólico: tirar foto
+            delay(2000);
+            Serial.print("Foto registrada com sucesso!\n");
+          	digitalWrite(LED_CAMERA, LOW);
+          	estadoleitura = 1;
+      	} 
+    }    
+    else{
+      	if(estadoleitura == 1)
+        {	
+        	  Serial.print("Veiculo se afastando. Distancia verificada: ");
+    		    Serial.print(distancia);
+      		  Serial.println("cm");
+      		  digitalWrite(LED_ESTADO, LOW);	
+          	estadoleitura = 0;
+        }    	      	  
+    } 
+    delay(TIMERLOOP);
+}
